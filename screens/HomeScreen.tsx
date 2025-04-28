@@ -11,7 +11,7 @@ export default function HomeScreen() {
         source={require("../assets/images/traya-home.png")}
         className="w-full h-96 bg-[#4FAA7F]"
       />
-      <View className="px-5">
+      <View className="px-5 w-full">
         <Text className="text-4xl font-semibold pt-10">
           Know The Root Cause Of Your Hair Loss
         </Text>
@@ -29,7 +29,6 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
