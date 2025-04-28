@@ -1,2 +1,2 @@
-import HairTestScreen from "@/screens/HairTestScreen";
-export default HairTestScreen;
+import HairLossScreen from "@/screens/HairLossScreen";
+export default HairLossScreen;
