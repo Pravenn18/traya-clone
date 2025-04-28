@@ -6,6 +6,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
 import SelectionCard from "@/components/Options";
 import { answersAtom, currentQuestionIndexAtom } from "@/data/atom";
+import TrayaButton from "@/components/TrayaButton";
+import ProgressBar from "@/components/ProgressBar";
 
 const HairLossScreen = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useAtom(
@@ -91,15 +93,33 @@ const HairLossScreen = () => {
 
   const renderLastPage = () => {
     return (
-      <View>
-        <Image
-          source={require("../assets/images/scalp.png")}
-          className="w-80 h-80"
-        />
-        <Text>Last Screen</Text>
+      <View className="flex-1 px-5">
+        <View className="my-6">
+          <Image source={currentQuestion.titleImage} className="w-20 h-20" />
+          <Text className="font-medium text-4xl mt-4 text-[#8A8B85]">
+            {currentQuestion.title}
+          </Text>
+          <View className="bg-[#F3F3F1] w-20 h-2 mt-6" />
+        </View>
+
+        <View className="flex-1 items-center justify-center mt-4">
+          <Image
+            source={require("../assets/images/scalp.png")}
+            className="w-48 h-48 mb-8"
+          />
+          <Text className="font-medium text-xl text-center mb-10">
+            Upload scalp photo to help doctors diagnose and prescribe your kit
+          </Text>
+
+          <View className="w-full space-y-4 mb-8 gap-2">
+            <TrayaButton title="Upload From Gallery" onPress={() => {}} />
+            <TrayaButton title="Take Photo" onPress={() => {}} />
+          </View>
+        </View>
       </View>
     );
   };
+
   const determineCardType = () => {
     return currentQuestion.type || "radio";
   };
@@ -107,8 +127,11 @@ const HairLossScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <Header />
+      <ProgressBar pageId={currentQuestion.id} />
       {currentQuestion.id === 12 ? (
-        renderLastPage()
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          {renderLastPage()}
+        </ScrollView>
       ) : (
         <ScrollView className="px-5 flex-1">
           {currentQuestion.title && (
