@@ -9,7 +9,7 @@ type Props = {
 const TrayaButton: React.FC<Props> = ({ title, onPress }) => {
   return (
     <TouchableOpacity
-      className="bg-[#B7D340] px-7 py-4 justify-center items-center rounded-2xl"
+      className="bg-[#B7D340] px-7 py-4 justify-center items-center rounded-2xl w-full"
       onPress={onPress}
     >
       <Text className="text-black text-lg font-medium">{title}</Text>
