@@ -143,3 +143,67 @@ export const questionsData = [
     titleImage: require("../assets/images/mobile.png"),
   },
 ];
+
+export const videoSections = [
+  {
+    title: "Section 1",
+    videos: [
+      {
+        id: "1",
+        title: "Video 1",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      },
+      {
+        id: "2",
+        title: "Video 2",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      },
+      {
+        id: "3",
+        title: "Video 3",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      },
+      {
+        id: "4",
+        title: "Video 4",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      },
+      {
+        id: "5",
+        title: "Video 5",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      },
+    ],
+  },
+  {
+    title: "Section 2",
+    videos: [
+      {
+        id: "1",
+        title: "Video 1",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      },
+      {
+        id: "2",
+        title: "Video 2",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      },
+      {
+        id: "3",
+        title: "Video 3",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      },
+      {
+        id: "4",
+        title: "Video 4",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      },
+      {
+        id: "5",
+        title: "Video 5",
+        url: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      },
+    ],
+  },
+  // ... up to Section 5
+];
