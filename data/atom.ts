@@ -9,3 +9,4 @@ export const answersAtom = atom<{
   };
 }>({});
 export const currentQuestionIndexAtom = atom<number>(0);
+export const setReelPlay = atom<boolean>(false);
