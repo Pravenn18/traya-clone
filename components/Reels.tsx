@@ -1,6 +1,8 @@
+// Reels.tsx
 import { setReelPlay } from "@/data/atom";
 import { useIsFocused } from "@react-navigation/native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { BackHandler } from "react-native";
 import { useAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -18,20 +20,51 @@ import {
   NativeScrollEvent,
 } from "react-native";
 import Video from "react-native-video";
+import { videoSections } from "@/constants/Data";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
-const videos = [
-  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-  "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-];
-
 export default function Reels() {
+  useEffect(() => {
+    const handleBackPress = () => {
+      // Ensure all videos are paused before navigating back
+      setCurrentIndex(-1); // This will cause all videos to pause
+      setTimeout(() => router.back(), 50);
+      return true; // Prevent default behavior
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      handleBackPress
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
+  const params = useLocalSearchParams();
+  const sectionIndex = Number(params.sectionIndex || 0);
+  const videoIndex = Number(params.videoIndex || 0);
+
+  const [flattenedVideos, setFlattenedVideos] = useState([]);
+  const [initialScrollIndex, setInitialScrollIndex] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const videos = [];
+    let startIndex = 0;
+
+    if (videoSections[sectionIndex]) {
+      videos.push(...videoSections[sectionIndex].videos);
+      startIndex = videoIndex;
+    }
+
+    setFlattenedVideos(videos);
+    setInitialScrollIndex(startIndex);
+    setCurrentIndex(startIndex);
+    setLoading(false);
+  }, [sectionIndex, videoIndex]);
 
   const onMomentumScrollEnd = (
     event: NativeSyntheticEvent<NativeScrollEvent>
@@ -41,15 +74,38 @@ export default function Reels() {
     setCurrentIndex(newIndex);
   };
 
+  // Scroll to initial position after loading
+  useEffect(() => {
+    if (!loading && flatListRef.current && initialScrollIndex > 0) {
+      flatListRef.current.scrollToIndex({
+        index: initialScrollIndex,
+        animated: false,
+      });
+    }
+  }, [loading, initialScrollIndex]);
+
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         ref={flatListRef}
-        data={videos}
+        data={flattenedVideos}
         renderItem={({ item, index }) => (
-          <VideoItem uri={item} isActive={index === currentIndex} />
+          <VideoItem video={item} isActive={index === currentIndex} />
         )}
-        keyExtractor={(item) => item}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         pagingEnabled
         horizontal={false}
         showsVerticalScrollIndicator={false}
@@ -61,32 +117,57 @@ export default function Reels() {
           offset: height * index,
           index,
         })}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+        removeClippedSubviews={true}
+        onScrollToIndexFailed={(info) => {
+          const wait = new Promise((resolve) => setTimeout(resolve, 500));
+          wait.then(() => {
+            flatListRef.current?.scrollToIndex({
+              index: info.index,
+              animated: false,
+            });
+          });
+        }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
-const VideoItem = ({ uri, isActive }: { uri: string; isActive: boolean }) => {
-  const playerRef = useRef<any>(null);
+const VideoItem = ({ video, isActive }) => {
+  const playerRef = useRef(null);
   const [paused, setPaused] = useState(true);
   const [isBuffering, setIsBuffering] = useState(true);
-  //TODO: remove unused atom and make reels more smoother and optimised
   const [, shouldReelPlay] = useAtom(setReelPlay);
-
   const isScreenFocused = useIsFocused();
 
   useEffect(() => {
     setPaused(!(isActive && isScreenFocused));
+
+    if (!isScreenFocused) {
+      setPaused(true);
+    }
   }, [isActive, isScreenFocused]);
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active" && isActive && isScreenFocused) {
         setPaused(false);
+      } else if (state !== "active") {
+        setPaused(true);
       }
     });
     return () => sub.remove();
   }, [isActive, isScreenFocused]);
+
+  useEffect(() => {
+    return () => {
+      if (playerRef.current) {
+        setPaused(true);
+      }
+    };
+  }, []);
 
   return (
     <Pressable
@@ -94,7 +175,7 @@ const VideoItem = ({ uri, isActive }: { uri: string; isActive: boolean }) => {
       style={styles.videoContainer}
     >
       <Video
-        source={{ uri }}
+        source={{ uri: video.url }}
         ref={playerRef}
         style={styles.video}
         resizeMode="cover"
@@ -103,11 +184,20 @@ const VideoItem = ({ uri, isActive }: { uri: string; isActive: boolean }) => {
         onLoadStart={() => setIsBuffering(true)}
         onReadyForDisplay={() => setIsBuffering(false)}
         onBuffer={({ isBuffering }) => setIsBuffering(isBuffering)}
+        playInBackground={false}
+        playWhenInactive={false}
       />
       {isBuffering && (
         <ActivityIndicator size="large" color="#fff" style={styles.loader} />
       )}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => {
+          // Ensure video is paused before navigation
+          setPaused(true);
+          setTimeout(() => router.back(), 50);
+        }}
+      >
         <Text style={{ color: "white", fontSize: 20 }}>{"←"}</Text>
       </TouchableOpacity>
       <View style={styles.rightOverlay}>
@@ -131,8 +221,8 @@ const VideoItem = ({ uri, isActive }: { uri: string; isActive: boolean }) => {
           style={styles.avatar}
         />
         <Text style={styles.caption}>
-          <Text style={{ fontWeight: "bold" }}>Traya. </Text>
-          Yaseen lost his hair at 19. What happened next?
+          <Text style={{ fontWeight: "bold" }}>{video.title} </Text>
+          {video.description || "Video description goes here"}
         </Text>
       </View>
     </Pressable>
@@ -200,91 +290,3 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 });
-
-// i am trting to make this kind of scrolling, i want to achieve it using react natiev videos instead of expo av
-// import {
-//   View,
-//   Dimensions,
-//   FlatList,
-//   StyleSheet,
-//   Pressable,
-// } from "react-native";
-// import { Video, ResizeMode } from "expo-av";
-// import React, { useEffect, useRef, useState } from "react";
-
-// const videos = [
-//   "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-//   "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-//   "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-//   "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-//   "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-// ];
-
-// export default function VideosScreen() {
-//   const [currentViewableItemIndex, setCurrentViewableItemIndex] = useState(0);
-//   const viewabilityConfig = { viewAreaCoveragePercentThreshold: 50 };
-//   const onViewableItemsChanged = ({ viewableItems }: any) => {
-//     if (viewableItems.length > 0) {
-//       setCurrentViewableItemIndex(viewableItems[0].index ?? 0);
-//     }
-//   };
-//   const viewabilityConfigCallbackPairs = useRef([
-//     { viewabilityConfig, onViewableItemsChanged },
-//   ]);
-//   return (
-
-//        (
-
-//         )}
-//         keyExtractor={(item) => item}
-//         pagingEnabled
-//         horizontal={false}
-//         showsVerticalScrollIndicator={false}
-//         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
-//       />
-
-//   );
-// }
-
-// const Item = ({ item, shouldPlay }: { shouldPlay: boolean; item: string }) => {
-//   const video = React.useRef(null);
-//   const [status, setStatus] = useState(null);
-
-//   useEffect(() => {
-//     if (!video.current) return;
-
-//     if (shouldPlay) {
-//       video.current.playAsync();
-//     } else {
-//       video.current.pauseAsync();
-//       video.current.setPositionAsync(0);
-//     }
-//   }, [shouldPlay]);
-
-//   return (
-
-//         status.isPlaying
-//           ? video.current?.pauseAsync()
-//           : video.current?.playAsync()
-//       }
-//     >
-
-//          setStatus(() => status)}
-//         />
-
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   videoContainer: {
-//     width: Dimensions.get("window").width,
-//     height: Dimensions.get("window").height,
-//   },
-//   video: {
-//     width: "100%",
-//     height: "100%",
-//   },
-// });
