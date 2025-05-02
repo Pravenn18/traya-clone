@@ -8,6 +8,7 @@ import SelectionCard from "@/components/Options";
 import { answersAtom, currentQuestionIndexAtom } from "@/data/atom";
 import TrayaButton from "@/components/TrayaButton";
 import ProgressBar from "@/components/ProgressBar";
+import { router } from "expo-router";
 
 const HairLossScreen = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useAtom(
@@ -112,7 +113,10 @@ const HairLossScreen = () => {
           </Text>
 
           <View className="w-full space-y-4 mb-8 gap-2">
-            <TrayaButton title="Upload From Gallery" onPress={() => {}} />
+            <TrayaButton
+              title="Upload From Gallery"
+              onPress={() => router.push("/(stack)/resultScreen")}
+            />
             <TrayaButton title="Take Photo" onPress={() => {}} />
           </View>
         </View>

@@ -20,7 +20,7 @@ export default function HomeScreen() {
         </Text>
         <TrayaButton
           title={"Complete The Hair Test"}
-          onPress={() => router.push("/(stack)/hair-loss")}
+          onPress={() => router.push("/(tabs)/hair")}
         />
       </View>
     </SafeAreaView>
