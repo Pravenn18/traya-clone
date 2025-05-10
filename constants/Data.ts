@@ -1,4 +1,6 @@
-export const questionsData = [
+import { Question } from "@/types";
+
+export const questionsData: Question[] = [
   {
     id: 1,
     type: "info",
@@ -24,8 +26,8 @@ export const questionsData = [
     question: "Do you have a family history of hair loss?",
     options: [
       "None",
-      "Mother or anyone from mother’s side of the family",
-      "Father or anyone from mother’s side of the family",
+      "Mother or anyone from mother's side of the family",
+      "Father or anyone from mother's side of the family",
       "Both",
     ],
     optionsImage: ["", "", "", ""],
@@ -139,8 +141,11 @@ export const questionsData = [
   },
   {
     id: 12,
+    type: "info",
     title: "SCALP",
     titleImage: require("../assets/images/mobile.png"),
+    question: "Take a photo of your scalp",
+    options: ["Take Photo"],
   },
 ];
 
