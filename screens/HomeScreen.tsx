@@ -1,10 +1,38 @@
 import TrayaButton from "@/components/TrayaButton";
+import { answersAtom, currentQuestionIndexAtom } from "@/data/atom";
+import { answersService } from "@/services/answersService";
+import { fetchUsers } from "@/services/supabaseServices";
 import { useRouter } from "expo-router";
+import { useAtom } from "jotai";
+import { useEffect } from "react";
 import { StyleSheet, Text, Image, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+  const [, setAnswers] = useAtom(answersAtom);
+  const [, setCurrentQuestionIndex] = useAtom(currentQuestionIndexAtom);
   const router = useRouter();
+  
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleContinue = async () => {
+    try {
+      const savedData = await answersService.getFromLocalStorage();
+      if (savedData) {
+        setAnswers(savedData.answers);
+        setCurrentQuestionIndex(savedData.currentQuestionIndex);
+      } else {
+        setAnswers({});
+        setCurrentQuestionIndex(0);
+      }
+      router.push("/(tabs)/hair");
+    } catch (error) {
+      console.error("Error loading answers:", error);
+    }
+  }
+  
   return (
     <SafeAreaView style={styles.titleContainer}>
       <Image
@@ -20,7 +48,7 @@ export default function HomeScreen() {
         </Text>
         <TrayaButton
           title={"Complete The Hair Test"}
-          onPress={() => router.push("/(tabs)/hair")}
+          onPress={handleContinue}
         />
       </View>
     </SafeAreaView>
