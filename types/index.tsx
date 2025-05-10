@@ -1,3 +1,15 @@
+export type QuestionType = "info" | "radio" | "checkbox";
+
+export interface Question {
+  id: number;
+  type: QuestionType;
+  title: string;
+  titleImage: any;
+  question: string;
+  options: string[];
+  optionsImage?: any[];
+}
+
 export interface UserAnswer {
   questionId: number;
   selectedOptions: string[] | string;
