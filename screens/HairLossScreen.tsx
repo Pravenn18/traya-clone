@@ -10,6 +10,7 @@ import TrayaButton from "@/components/TrayaButton";
 import ProgressBar from "@/components/ProgressBar";
 import { router } from "expo-router";
 import * as ImagePicker from 'expo-image-picker';
+import { answersService } from "@/services/answersService";
 
 const HairLossScreen = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useAtom(
@@ -73,16 +74,21 @@ const HairLossScreen = () => {
       alert('Error taking photo. Please try again.');
     }
   };
-
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (currentQuestionIndex < questionsData.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      router.push('/(stack)/resultScreen');
+      try {
+        //TODO: Add user id
+        await answersService.saveToDatabase("1", answers);
+        router.push('/(stack)/resultScreen');
+      } catch (error) {
+        console.error("Error saving to database:", error);
+      }
     }
   };
 
-  const handleOptionSelect = (option: string, index: number) => {
+  const handleOptionSelect =  (option: string, index: number) => {
     const currentType = currentQuestion.type || "radio";
     let newAnswers = { ...answers };
 
@@ -112,9 +118,12 @@ const HairLossScreen = () => {
         }, 300);
       }
     }
-
     setAnswers(newAnswers);
   };
+
+  useEffect(() => {
+    answersService.saveToLocalStorage(answers, currentQuestionIndex);
+  }, [answers]);
 
   const getDefaultSelected = () => {
     if (answers[currentQuestion.id]) {
