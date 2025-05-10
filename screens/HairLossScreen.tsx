@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import { questionsData } from "@/constants/Data";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAtom } from "jotai";
@@ -9,13 +9,78 @@ import { answersAtom, currentQuestionIndexAtom } from "@/data/atom";
 import TrayaButton from "@/components/TrayaButton";
 import ProgressBar from "@/components/ProgressBar";
 import { router } from "expo-router";
+import * as ImagePicker from 'expo-image-picker';
 
 const HairLossScreen = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useAtom(
     currentQuestionIndexAtom
   );
   const [answers, setAnswers] = useAtom(answersAtom);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const currentQuestion = questionsData[currentQuestionIndex];
+
+  const pickImage = async (useCamera: boolean) => {
+    try {
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          alert('Sorry, we need camera permissions to make this work!');
+          return;
+        }
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          alert('Sorry, we need gallery permissions to make this work!');
+          return;
+        }
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      // Rvact@7349
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      alert('Error picking image. Please try again.');
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Sorry, we need camera permissions to make this work!');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      alert('Error taking photo. Please try again.');
+    }
+  };
+
+  const handleContinue = () => {
+    if (currentQuestionIndex < questionsData.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      router.push('/(stack)/resultScreen');
+    }
+  };
 
   const handleOptionSelect = (option: string, index: number) => {
     const currentType = currentQuestion.type || "radio";
@@ -104,10 +169,17 @@ const HairLossScreen = () => {
         </View>
 
         <View className="flex-1 items-center justify-center mt-4">
-          <Image
-            source={require("../assets/images/scalp.png")}
-            className="w-48 h-48 mb-8"
-          />
+          {selectedImage ? (
+            <Image
+              source={{ uri: selectedImage }}
+              className="w-48 h-48 mb-8 rounded-lg"
+            />
+          ) : (
+            <Image
+              source={require("../assets/images/scalp.png")}
+              className="w-48 h-48 mb-8"
+            />
+          )}
           <Text className="font-medium text-xl text-center mb-10">
             Upload scalp photo to help doctors diagnose and prescribe your kit
           </Text>
@@ -115,10 +187,22 @@ const HairLossScreen = () => {
           <View className="w-full space-y-4 mb-8 gap-2">
             <TrayaButton
               title="Upload From Gallery"
-              onPress={() => router.push("/(stack)/resultScreen")}
+              onPress={() => pickImage(false)}
             />
-            <TrayaButton title="Take Photo" onPress={() => {}} />
+            <TrayaButton 
+              title="Take Photo" 
+              onPress={takePhoto}
+            />
           </View>
+
+          {selectedImage && (
+            <View className="w-full mt-4">
+              <TrayaButton
+                title="Continue"
+                onPress={handleContinue}
+              />
+            </View>
+          )}
         </View>
       </View>
     );
