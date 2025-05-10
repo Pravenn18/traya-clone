@@ -1,5 +1,5 @@
 import { calculateHairAssessment } from "@/services/hairAssessmentLogic";
-import { VideoSection } from "@/types";
+import { VideoSection, UserAnswer } from "@/types";
 import { atom } from "jotai";
 
 export const answersAtom = atom<{
@@ -11,10 +11,7 @@ export const currentQuestionIndexAtom = atom<number>(0);
 export const setReelPlay = atom<boolean>(false);
 
 export const videoSectionsAtom = atom<VideoSection[]>([]);
-export interface UserAnswer {
-  questionId: number;
-  selectedOptions: string[] | string;
-}
+
 export const formattedAnswersAtom = atom((get) => {
   const answers = get(answersAtom);
   const formattedAnswers: UserAnswer[] = [];
