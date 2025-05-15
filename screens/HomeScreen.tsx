@@ -1,6 +1,7 @@
 import TrayaButton from "@/components/TrayaButton";
 import { answersAtom, currentQuestionIndexAtom } from "@/data/atom";
 import { answersService } from "@/services/answersService";
+import { hairTestService } from "@/services/hairTestService";
 import { fetchUsers } from "@/services/supabaseServices";
 import { useRouter } from "expo-router";
 import { useAtom } from "jotai";
@@ -19,15 +20,21 @@ export default function HomeScreen() {
 
   const handleContinue = async () => {
     try {
-      const savedData = await answersService.getFromLocalStorage();
-      if (savedData) {
+      const savedData = await answersService.getFromLocalStorage("1");
+      const savedHairTest = await hairTestService.getFromLocalStorage();
+      if(savedHairTest) {
+        setAnswers(savedData?.answers ?? {});
+        router.push("/(stack)/resultScreen");
+      } else if (savedData) {
         setAnswers(savedData.answers);
         setCurrentQuestionIndex(savedData.currentQuestionIndex);
+        router.push("/(tabs)/hair");
       } else {
         setAnswers({});
         setCurrentQuestionIndex(0);
+        router.push("/(tabs)/hair");
       }
-      router.push("/(tabs)/hair");
+      
     } catch (error) {
       console.error("Error loading answers:", error);
     }
