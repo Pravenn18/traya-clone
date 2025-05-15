@@ -44,3 +44,9 @@ export type VideoSection = {
   title: string;
   videos: VideoItem[];
 };
+
+export type AnswersObject = {
+  [key: number]: {
+    selectedOptions: { option: string; index: number }[];
+  };
+};
