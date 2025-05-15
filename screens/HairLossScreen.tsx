@@ -11,6 +11,8 @@ import ProgressBar from "@/components/ProgressBar";
 import { router } from "expo-router";
 import * as ImagePicker from 'expo-image-picker';
 import { answersService } from "@/services/answersService";
+import { hairTestService } from "@/services/hairTestService";
+import { uploadFile } from "@/services/aws";
 
 const HairLossScreen = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useAtom(
@@ -79,11 +81,15 @@ const HairLossScreen = () => {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
       try {
-        //TODO: Add user id
-        await answersService.saveToDatabase("1", answers);
-        router.push('/(stack)/resultScreen');
+        if (selectedImage) {
+          const imageUrl = await uploadFile(selectedImage);
+          //TODO: Add user id
+          await hairTestService.saveToDatabase("1", imageUrl, answers);
+          router.push('/(stack)/resultScreen');
+        }
       } catch (error) {
-        console.error("Error saving to database:", error);
+        console.error("Error uploading image:", error);
+        alert('Error uploading image. Please try again.');
       }
     }
   };
